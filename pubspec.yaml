@@ -1,0 +1,96 @@
+name: pharma_way
+description: "Pharma Way - Premium Pharmaceutical Marketplace"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^14.2.7
+
+  # Network & API
+  dio: ^5.7.0
+  json_annotation: ^4.9.0
+  pretty_dio_logger: ^1.4.0
+
+  # Local Storage
+  shared_preferences: ^2.3.2
+  flutter_secure_storage: ^9.2.2
+
+  # UI Components
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.2
+  smooth_page_indicator: ^1.2.0+3
+  badges: ^3.1.2
+  flutter_slidable: ^3.1.1
+
+  # Utilities
+  intl: ^0.20.2
+  url_launcher: ^6.3.1
+  share_plus: ^10.0.2
+  connectivity_plus: ^6.0.5
+  package_info_plus: ^8.0.2
+
+  # Icons & Fonts
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+
+  # Utils
+  freezed_annotation: ^2.4.4
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Code Generation
+  build_runner: ^2.4.12
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.3
+  freezed: ^2.5.7
+  
+  # App Icon Generator
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+    - assets/logo/
+
+  # fonts:
+  #   - family: Cairo
+  #     fonts:
+  #       - asset: assets/fonts/Cairo-Regular.ttf
+  #       - asset: assets/fonts/Cairo-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Cairo-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Cairo-Medium.ttf
+  #         weight: 500
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/newlogo.jpeg"
+  min_sdk_android: 21
+  remove_alpha_ios: true
