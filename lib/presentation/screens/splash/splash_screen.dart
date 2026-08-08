@@ -15,6 +15,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeIn;
   late Animation<double> _taglineFade;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -55,13 +56,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final authState = ref.read(authProvider);
-
-    if (authState.isAuthenticated && authState.user != null) {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/home');
-    } else {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/login');
-    }
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (_hasNavigated) return;
+      
+      if (!next.isLoading) {
+        _hasNavigated = true;
+        if (next.isAuthenticated && next.user != null) {
+          if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+        } else {
+          if (mounted) Navigator.of(context).pushReplacementNamed('/login');
+        }
+      }
+    });
   }
 
   @override
