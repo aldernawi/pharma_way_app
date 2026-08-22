@@ -7,7 +7,9 @@ import '../../data/models/user_model.dart';
 
 // Providers
 
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
+final storageServiceProvider = Provider<StorageService>(
+  (ref) => StorageService(),
+);
 
 final authDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
   return AuthRemoteDataSource(ref.watch(dioClientProvider));
@@ -58,24 +60,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _checkAuthStatus() async {
-    state = state.copyWith(isLoading: true);
+    state = AuthState(isLoading: true);
     try {
       final isLoggedIn = await _repository.isLoggedIn();
-      if (isLoggedIn) {
-        final user = await _repository.getCurrentUser();
-        state = state.copyWith(
-          user: user,
-          isAuthenticated: true,
-          isLoading: false,
-        );
-      } else {
-        state = state.copyWith(isLoading: false);
+      final user = isLoggedIn ? await _repository.getCurrentUser() : null;
+
+      // A session is valid only when its token and cached account data exist.
+      // Previously `copyWith` could not assign a nullable user, which left the
+      // splash screen with `isAuthenticated == true` but no user and forced
+      // the user back to the login page on every app launch.
+      if (isLoggedIn && user != null) {
+        state = AuthState(user: user, isAuthenticated: true);
+        return;
       }
+
+      state = AuthState();
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = AuthState(error: e.toString());
     }
   }
 
@@ -90,10 +91,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
   }
@@ -109,10 +107,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
   }
@@ -140,15 +135,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final user = await _repository.updateProfile(request);
-      state = state.copyWith(
-        user: user,
-        isLoading: false,
-      );
+      state = state.copyWith(user: user, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }

@@ -49,25 +49,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     _controller.forward();
-    _navigateToNextScreen();
-  }
-
-  Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-
-    ref.listen<AuthState>(authProvider, (previous, next) {
-      if (_hasNavigated) return;
-      
-      if (!next.isLoading) {
-        _hasNavigated = true;
-        if (next.isAuthenticated && next.user != null) {
-          if (mounted) Navigator.of(context).pushReplacementNamed('/home');
-        } else {
-          if (mounted) Navigator.of(context).pushReplacementNamed('/login');
-        }
+    
+    // Navigate after delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && !_hasNavigated) {
+        _checkAuthAndNavigate();
       }
     });
+  }
+
+  void _checkAuthAndNavigate() {
+    final authState = ref.read(authProvider);
+    
+    if (!authState.isLoading) {
+      _hasNavigated = true;
+      if (authState.isAuthenticated && authState.user != null) {
+        if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        if (mounted) Navigator.of(context).pushReplacementNamed('/login');
+      }
+    } else {
+      // If still loading, check again after a short delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && !_hasNavigated) {
+          _checkAuthAndNavigate();
+        }
+      });
+    }
   }
 
   @override

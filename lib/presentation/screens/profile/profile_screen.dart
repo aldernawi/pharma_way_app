@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import 'edit_profile_screen.dart';
@@ -40,7 +42,10 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primary.withValues(alpha:0.8)],
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primary.withValues(alpha: 0.8),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -67,22 +72,22 @@ class ProfileScreen extends ConsumerWidget {
                   Text(
                     user?.name ?? 'مستخدم',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   // Email
                   Text(
                     user?.email ?? '',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha:0.9),
-                        ),
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
                 ],
               ),
             ),
-            
+
             // Statistics Cards
             if (statistics != null)
               Padding(
@@ -111,50 +116,44 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-            
+
             // Pharmacy Info
             if (user?.pharmacy != null) ...[
               _buildSectionHeader(context, 'معلومات الصيدلية'),
-              _buildInfoCard(
-                context,
-                [
-                  _InfoItem(
-                    icon: Icons.business,
-                    label: 'اسم الصيدلية',
-                    value: user!.pharmacy!.name,
-                  ),
-                  _InfoItem(
-                    icon: Icons.location_on_outlined,
-                    label: 'العنوان',
-                    value: user.pharmacy!.address,
-                  ),
-                  _InfoItem(
-                    icon: Icons.phone_outlined,
-                    label: 'رقم الهاتف',
-                    value: user.pharmacy!.phone,
-                  ),
-                ],
-              ),
+              _buildInfoCard(context, [
+                _InfoItem(
+                  icon: Icons.business,
+                  label: 'اسم الصيدلية',
+                  value: user!.pharmacy!.name,
+                ),
+                _InfoItem(
+                  icon: Icons.location_on_outlined,
+                  label: 'العنوان',
+                  value: user.pharmacy!.address,
+                ),
+                _InfoItem(
+                  icon: Icons.phone_outlined,
+                  label: 'رقم الهاتف',
+                  value: user.pharmacy!.phone,
+                ),
+              ]),
             ],
-            
+
             // Account Info
             _buildSectionHeader(context, 'معلومات الحساب'),
-            _buildInfoCard(
-              context,
-              [
-                _InfoItem(
-                  icon: Icons.person_outline,
-                  label: 'الاسم',
-                  value: user?.name ?? 'غير متوفر',
-                ),
-                _InfoItem(
-                  icon: Icons.email_outlined,
-                  label: 'البريد الإلكتروني',
-                  value: user?.email ?? 'غير متوفر',
-                ),
-              ],
-            ),
-            
+            _buildInfoCard(context, [
+              _InfoItem(
+                icon: Icons.person_outline,
+                label: 'الاسم',
+                value: user?.name ?? 'غير متوفر',
+              ),
+              _InfoItem(
+                icon: Icons.email_outlined,
+                label: 'البريد الإلكتروني',
+                value: user?.email ?? 'غير متوفر',
+              ),
+            ]),
+
             // Actions
             _buildSectionHeader(context, 'الإعدادات'),
             Padding(
@@ -208,12 +207,21 @@ class ProfileScreen extends ConsumerWidget {
                       );
                     },
                   ),
+                  _buildActionTile(
+                    context,
+                    icon: Icons.delete_outline,
+                    title: 'حذف الحساب',
+                    subtitle: 'طلب حذف الحساب والبيانات المرتبطة به',
+                    iconColor: AppColors.error,
+                    titleColor: AppColors.error,
+                    onTap: () => _confirmAccountDeletion(context),
+                  ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Logout Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -263,14 +271,17 @@ class ProfileScreen extends ConsumerWidget {
                       SizedBox(width: 8),
                       Text(
                         'تسجيل الخروج',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 40),
           ],
         ),
@@ -295,16 +306,16 @@ class ProfileScreen extends ConsumerWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -329,9 +340,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -357,16 +368,14 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Text(
                           item.label,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textTertiary),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           item.value,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -385,18 +394,59 @@ class ProfileScreen extends ConsumerWidget {
     required IconData icon,
     required String title,
     String? subtitle,
+    Color? iconColor,
+    Color? titleColor,
     required VoidCallback onTap,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(title),
+        leading: Icon(icon, color: iconColor ?? AppColors.primary),
+        title: Text(title, style: TextStyle(color: titleColor)),
         subtitle: subtitle != null ? Text(subtitle) : null,
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
       ),
     );
+  }
+
+  Future<void> _confirmAccountDeletion(BuildContext context) async {
+    final shouldContinue = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف الحساب'),
+        content: const Text(
+          'سيتم فتح صفحة آمنة لإرسال طلب حذف حسابك وبياناتك المرتبطة به. '
+          'قد نحتاج إلى التحقق من ملكية الحساب قبل تنفيذ الطلب.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('متابعة'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldContinue != true || !context.mounted) return;
+
+    final launched = await launchUrl(
+      Uri.parse(AppConstants.accountDeletionUrl),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذر فتح صفحة حذف الحساب. حاول مرة أخرى.'),
+        ),
+      );
+    }
   }
 }
 
@@ -405,9 +455,5 @@ class _InfoItem {
   final String label;
   final String value;
 
-  _InfoItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  _InfoItem({required this.icon, required this.label, required this.value});
 }
