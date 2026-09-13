@@ -427,7 +427,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   product.isInStock
-                                      ? 'متوفر (${product.stockQuantity})'
+                                      ? product.isLowStock
+                                          ? 'كمية محدودة (${product.stockQuantity})'
+                                          : 'متوفر (${product.stockQuantity})'
                                       : 'نفذ',
                                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                         color: Colors.white,
@@ -435,6 +437,41 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                       ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Product information at a glance
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceVariant.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildProductFact(
+                              context,
+                              icon: Icons.category_outlined,
+                              label: 'التصنيف',
+                              value: product.category?.displayNameOrDefault ?? 'غير محدد',
+                            ),
+                          ),
+                          Container(width: 1, height: 42, color: AppColors.border),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildProductFact(
+                              context,
+                              icon: Icons.qr_code_2,
+                              label: 'الباركود',
+                              value: product.barcode ?? 'غير متوفر',
                             ),
                           ),
                         ],
@@ -459,57 +496,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       ProductDescriptionSection(
                         description: product.displayDescription,
                       ),
-                    // Barcode
-                    if (product.barcode != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLighter.withValues(alpha:0.3),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha:0.2),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha:0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.qr_code_2,
-                                size: 24,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'الباركود',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.textTertiary,
-                                      ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  product.barcode!,
-                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                    ] else
-                      const SizedBox(height: 100),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -632,6 +619,50 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               ),
             )
           : null,
+    );
+  }
+
+  Widget _buildProductFact(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: AppColors.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,10 +18,7 @@ import 'presentation/screens/favorites/favorites_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize storage service
-  await StorageService().init();
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -27,18 +26,23 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  
-  runApp(
-    const ProviderScope(
-      child: PharmaWayApp(),
-    ),
+
+  runApp(const ProviderScope(child: PharmaWayApp()));
+
+  // Never keep iOS on a blank native launch screen if local storage is slow
+  // or temporarily unavailable. The app can show its splash screen first.
+  unawaited(
+    StorageService().init().catchError((Object error, StackTrace stackTrace) {
+      debugPrint('Storage initialization failed: $error');
+    }),
   );
 }
 
 class PharmaWayApp extends StatelessWidget {
   const PharmaWayApp({super.key});
 
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -47,19 +51,16 @@ class PharmaWayApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       navigatorKey: navigatorKey,
-      
+
       // Localization
       locale: const Locale('ar'),
-      supportedLocales: const [
-        Locale('ar'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      
+
       // Routes
       initialRoute: '/',
       routes: {

@@ -33,9 +33,9 @@ class QuantitySelector extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'الكمية',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -49,16 +49,11 @@ class QuantitySelector extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildQuantityButton(
-                context,
-                Icons.remove,
-                quantity > 1,
-                () {
-                  if (quantity > 1) {
-                    onQuantityChanged(quantity - 1);
-                  }
-                },
-              ),
+              _buildQuantityButton(context, Icons.remove, quantity > 1, () {
+                if (quantity > 1) {
+                  onQuantityChanged(quantity - 1);
+                }
+              }),
               Container(
                 width: 80,
                 height: 48,
@@ -67,19 +62,28 @@ class QuantitySelector extends StatelessWidget {
                   controller: quantityController,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                  decoration: const InputDecoration(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
+                    suffixIcon: IconButton(
+                      tooltip: 'تأكيد الكمية',
+                      icon: const Icon(Icons.check, color: AppColors.primary),
+                      onPressed: () => FocusScope.of(context).unfocus(),
+                    ),
                   ),
                   onChanged: (value) {
                     final newQuantity = int.tryParse(value);
-                    if (newQuantity != null && newQuantity > 0 && newQuantity <= stockQuantity) {
+                    if (newQuantity != null &&
+                        newQuantity > 0 &&
+                        newQuantity <= stockQuantity) {
                       onQuantityChanged(newQuantity);
-                    } else if (newQuantity != null && newQuantity > stockQuantity) {
+                    } else if (newQuantity != null &&
+                        newQuantity > stockQuantity) {
                       onQuantityChanged(stockQuantity);
                       quantityController.text = stockQuantity.toString();
                       quantityController.selection = TextSelection.fromPosition(
@@ -96,6 +100,7 @@ class QuantitySelector extends StatelessWidget {
                       onQuantityChanged(stockQuantity);
                       quantityController.text = stockQuantity.toString();
                     }
+                    FocusScope.of(context).unfocus();
                   },
                 ),
               ),
@@ -139,7 +144,7 @@ class QuantitySelector extends StatelessWidget {
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha:0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
