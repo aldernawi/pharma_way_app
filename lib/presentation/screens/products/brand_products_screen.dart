@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/responsive_layout.dart';
 import '../../../data/models/brand_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../providers/cart_provider.dart';
@@ -57,8 +58,12 @@ class BrandProductsState {
       products: products ?? this.products,
       availableCategories: availableCategories ?? this.availableCategories,
       availableCompanies: availableCompanies ?? this.availableCompanies,
-      selectedCategoryId: clearCategoryFilter ? null : (selectedCategoryId ?? this.selectedCategoryId),
-      selectedCompanyId: clearCompanyFilter ? null : (selectedCompanyId ?? this.selectedCompanyId),
+      selectedCategoryId: clearCategoryFilter
+          ? null
+          : (selectedCategoryId ?? this.selectedCategoryId),
+      selectedCompanyId: clearCompanyFilter
+          ? null
+          : (selectedCompanyId ?? this.selectedCompanyId),
       minPrice: clearPriceFilter ? null : (minPrice ?? this.minPrice),
       maxPrice: clearPriceFilter ? null : (maxPrice ?? this.maxPrice),
       sortBy: sortBy ?? this.sortBy,
@@ -74,7 +79,8 @@ class BrandProductsNotifier extends StateNotifier<BrandProductsState> {
   final ProductRepositoryImpl _repository;
   final int brandId;
 
-  BrandProductsNotifier(this._repository, this.brandId) : super(BrandProductsState()) {
+  BrandProductsNotifier(this._repository, this.brandId)
+    : super(BrandProductsState()) {
     loadProducts();
   }
 
@@ -110,10 +116,7 @@ class BrandProductsNotifier extends StateNotifier<BrandProductsState> {
           isLoading: false,
         );
       } else {
-        state = state.copyWith(
-          products: products,
-          isLoading: false,
-        );
+        state = state.copyWith(products: products, isLoading: false);
       }
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
@@ -171,17 +174,22 @@ class BrandProductsNotifier extends StateNotifier<BrandProductsState> {
 }
 
 // Provider for brand products
-final brandProductsProvider = StateNotifierProvider.family<BrandProductsNotifier, BrandProductsState, int>((ref, brandId) {
-  return BrandProductsNotifier(ref.read(productRepositoryProvider), brandId);
-});
+final brandProductsProvider =
+    StateNotifierProvider.family<
+      BrandProductsNotifier,
+      BrandProductsState,
+      int
+    >((ref, brandId) {
+      return BrandProductsNotifier(
+        ref.read(productRepositoryProvider),
+        brandId,
+      );
+    });
 
 class BrandProductsScreen extends ConsumerWidget {
   final BrandModel brand;
 
-  const BrandProductsScreen({
-    super.key,
-    required this.brand,
-  });
+  const BrandProductsScreen({super.key, required this.brand});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -239,101 +247,131 @@ class BrandProductsScreen extends ConsumerWidget {
       body: productsState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : productsState.error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-                      const SizedBox(height: 16),
-                      Text(
-                        'حدث خطأ في تحميل المنتجات',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () {
-                          ref.read(brandProductsProvider(brand.id).notifier).loadProducts();
-                        },
-                        child: const Text('إعادة المحاولة'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppColors.error,
                   ),
-                )
-              : Column(
-                  children: [
-                    // Active filters indicator
-                    if (_hasActiveFilters(productsState))
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        color: AppColors.primaryLighter,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.filter_alt, size: 16, color: AppColors.primary),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _getActiveFiltersText(productsState),
-                                style: const TextStyle(fontSize: 12, color: AppColors.primary),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                ref.read(brandProductsProvider(brand.id).notifier).clearAllFilters();
-                              },
-                              child: const Text('إزالة الكل', style: TextStyle(fontSize: 12)),
-                            ),
-                          ],
+                  const SizedBox(height: 16),
+                  Text(
+                    'حدث خطأ في تحميل المنتجات',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref
+                          .read(brandProductsProvider(brand.id).notifier)
+                          .loadProducts();
+                    },
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                // Active filters indicator
+                if (_hasActiveFilters(productsState))
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: AppColors.primaryLighter,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.filter_alt,
+                          size: 16,
+                          color: AppColors.primary,
                         ),
-                      ),
-                    // Products Grid
-                    Expanded(
-                      child: productsState.products.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'لا توجد منتجات',
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'لا توجد منتجات متاحة لهذه الماركة حالياً',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _getActiveFiltersText(productsState),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref
+                                .read(brandProductsProvider(brand.id).notifier)
+                                .clearAllFilters();
+                          },
+                          child: const Text(
+                            'إزالة الكل',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Products Grid
+                Expanded(
+                  child: productsState.products.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.inventory_2_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                            )
-                          : GridView.builder(
-                              padding: const EdgeInsets.all(16),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
+                              const SizedBox(height: 16),
+                              Text(
+                                'لا توجد منتجات',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'لا توجد منتجات متاحة لهذه الماركة حالياً',
+                                style: Theme.of(context).textTheme.bodySmall,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        )
+                      : GridView.builder(
+                          padding: ResponsiveLayout.gridPadding(context),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: ResponsiveLayout.gridColumns(
+                                  context,
+                                ),
                                 childAspectRatio: 0.65,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                               ),
-                              itemCount: productsState.products.length,
-                              itemBuilder: (context, index) {
-                                final product = productsState.products[index];
-                                return ProductCard(
-                                  product: product,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProductDetailsScreen(productId: product.id),
-                                      ),
-                                    );
-                                  },
+                          itemCount: productsState.products.length,
+                          itemBuilder: (context, index) {
+                            final product = productsState.products[index];
+                            return ProductCard(
+                              product: product,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailsScreen(
+                                      productId: product.id,
+                                    ),
+                                  ),
                                 );
                               },
-                            ),
-                    ),
-                  ],
+                            );
+                          },
+                        ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -357,14 +395,12 @@ class BrandProductsScreen extends ConsumerWidget {
 
   void _showFiltersBottomSheet(BuildContext context, WidgetRef ref) {
     final state = ref.read(brandProductsProvider(brand.id));
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _FiltersBottomSheet(
-        brandId: brand.id,
-        currentState: state,
-      ),
+      builder: (context) =>
+          _FiltersBottomSheet(brandId: brand.id, currentState: state),
     );
   }
 }
@@ -380,7 +416,8 @@ class _FiltersBottomSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_FiltersBottomSheet> createState() => _FiltersBottomSheetState();
+  ConsumerState<_FiltersBottomSheet> createState() =>
+      _FiltersBottomSheetState();
 }
 
 class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
@@ -450,7 +487,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                   children: [
                     // Category filter
                     if (state.availableCategories.isNotEmpty) ...[
-                      Text('الفئة', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'الفئة',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
@@ -467,7 +507,11 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                               label: Text(category.displayNameOrDefault),
                               selected: selectedCategoryId == category.id,
                               onSelected: (selected) {
-                                setState(() => selectedCategoryId = selected ? category.id : null);
+                                setState(
+                                  () => selectedCategoryId = selected
+                                      ? category.id
+                                      : null,
+                                );
                               },
                             );
                           }),
@@ -477,7 +521,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                     ],
                     // Company filter
                     if (state.availableCompanies.isNotEmpty) ...[
-                      Text('الشركة', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'الشركة',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
@@ -494,7 +541,11 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                               label: Text(company.name),
                               selected: selectedCompanyId == company.id,
                               onSelected: (selected) {
-                                setState(() => selectedCompanyId = selected ? company.id : null);
+                                setState(
+                                  () => selectedCompanyId = selected
+                                      ? company.id
+                                      : null,
+                                );
                               },
                             );
                           }),
@@ -503,7 +554,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                       const SizedBox(height: 16),
                     ],
                     // Price range
-                    Text('نطاق السعر', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'نطاق السعر',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -534,7 +588,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                     ),
                     const SizedBox(height: 16),
                     // Sort options
-                    Text('الترتيب', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'الترتيب',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: sortBy,
@@ -543,7 +600,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                         labelText: 'ترتيب حسب',
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'created_at', child: Text('الأحدث')),
+                        DropdownMenuItem(
+                          value: 'created_at',
+                          child: Text('الأحدث'),
+                        ),
                         DropdownMenuItem(value: 'price', child: Text('السعر')),
                         DropdownMenuItem(value: 'name', child: Text('الاسم')),
                       ],
@@ -576,11 +636,18 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        ref.read(brandProductsProvider(widget.brandId).notifier).clearAllFilters();
+                        ref
+                            .read(
+                              brandProductsProvider(widget.brandId).notifier,
+                            )
+                            .clearAllFilters();
                         Navigator.pop(context);
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 14,
+                        ),
                       ),
                       child: const FittedBox(
                         fit: BoxFit.scaleDown,
@@ -593,9 +660,15 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () {
-                        final notifier = ref.read(brandProductsProvider(widget.brandId).notifier);
-                        final minP = minPriceController.text.isEmpty ? null : double.tryParse(minPriceController.text);
-                        final maxP = maxPriceController.text.isEmpty ? null : double.tryParse(maxPriceController.text);
+                        final notifier = ref.read(
+                          brandProductsProvider(widget.brandId).notifier,
+                        );
+                        final minP = minPriceController.text.isEmpty
+                            ? null
+                            : double.tryParse(minPriceController.text);
+                        final maxP = maxPriceController.text.isEmpty
+                            ? null
+                            : double.tryParse(maxPriceController.text);
 
                         // Apply all filters in a single call
                         notifier.applyAllFilters(
@@ -609,7 +682,10 @@ class _FiltersBottomSheetState extends ConsumerState<_FiltersBottomSheet> {
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                       ),
                       child: const FittedBox(
                         fit: BoxFit.scaleDown,

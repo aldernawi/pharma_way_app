@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/responsive_layout.dart';
 import '../../../data/models/company_model.dart';
 import '../../providers/home_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -76,7 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homeState = ref.watch(homeProvider);
     final authState = ref.watch(authProvider);
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
@@ -92,26 +93,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Search Results
               if (_isSearching)
-                SliverToBoxAdapter(
-                  child: _buildSearchResults(),
-                ),
+                SliverToBoxAdapter(child: _buildSearchResults()),
 
               // Loading shimmer
               if (homeState.isLoading && homeState.companies.isEmpty)
                 const SliverToBoxAdapter(child: HomeShimmer())
               else if (homeState.error != null)
-                SliverFillRemaining(
-                  child: _buildErrorState(context),
-                )
-              else if (homeState.companies.isEmpty && 
-                       homeState.goldenAds.isEmpty && 
-                       homeState.silverAds.isEmpty)
+                SliverFillRemaining(child: _buildErrorState(context))
+              else if (homeState.companies.isEmpty &&
+                  homeState.goldenAds.isEmpty &&
+                  homeState.silverAds.isEmpty)
                 SliverFillRemaining(
                   child: Center(
                     child: EmptyStateWidget(
                       icon: Icons.inventory_2_outlined,
                       title: 'لا توجد بيانات حالياً',
-                      message: 'لا توجد شركات أو إعلانات متاحة في الوقت الحالي\nيرجى المحاولة مرة أخرى لاحقاً',
+                      message:
+                          'لا توجد شركات أو إعلانات متاحة في الوقت الحالي\nيرجى المحاولة مرة أخرى لاحقاً',
                       onRetry: () => ref.read(homeProvider.notifier).refresh(),
                       isFullScreen: true,
                     ),
@@ -127,12 +125,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: GoldenAdCard(
                       ads: homeState.goldenAds,
                       onCompanyTap: (companyId) {
-                        final company = homeState.companies.where((c) => c.id == companyId).firstOrNull;
+                        final company = homeState.companies
+                            .where((c) => c.id == companyId)
+                            .firstOrNull;
                         if (company != null) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CompanyProductsScreen(company: company),
+                              builder: (context) =>
+                                  CompanyProductsScreen(company: company),
                             ),
                           );
                         }
@@ -140,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ],
-                
+
                 // Silver Ads Carousel
                 if (homeState.hasSilverAds) ...[
                   SliverToBoxAdapter(
@@ -150,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: SilverAdCarousel(ads: homeState.silverAds),
                   ),
                 ],
-                
+
                 // Brand Banners Section
                 if (homeState.brands.isNotEmpty) ...[
                   SliverToBoxAdapter(
@@ -171,7 +172,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BrandProductsScreen(brand: brand),
+                                  builder: (context) =>
+                                      BrandProductsScreen(brand: brand),
                                 ),
                               );
                             },
@@ -181,12 +183,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ],
-                
+
                 // Companies Section
                 SliverToBoxAdapter(
                   child: _buildSectionHeader(context, 'شركات الأدوية'),
                 ),
-                
+
                 if (homeState.companies.isEmpty)
                   SliverToBoxAdapter(
                     child: EmptyStateWidget(
@@ -197,33 +199,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.all(16),
+                    padding: ResponsiveLayout.gridPadding(context),
                     sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: ResponsiveLayout.gridColumns(context),
                         childAspectRatio: 0.75,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final company = homeState.companies[index];
-                          return CompanyCard(
-                            company: company,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CompanyProductsScreen(
-                                    company: company,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        childCount: homeState.companies.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final company = homeState.companies[index];
+                        return CompanyCard(
+                          company: company,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CompanyProductsScreen(company: company),
+                              ),
+                            );
+                          },
+                        );
+                      }, childCount: homeState.companies.length),
                     ),
                   ),
 
@@ -234,8 +232,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      
-      bottomNavigationBar: _buildBottomNavBar(context),
+
+      bottomNavigationBar: ResponsiveLayout.isTablet(context)
+          ? null
+          : _buildBottomNavBar(context),
+    );
+
+    if (!ResponsiveLayout.isTablet(context)) return scaffold;
+
+    return Row(
+      textDirection: TextDirection.rtl,
+      children: [
+        _buildTabletNavigationRail(context),
+        const VerticalDivider(width: 1),
+        Expanded(child: scaffold),
+      ],
     );
   }
 
@@ -244,9 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return SliverToBoxAdapter(
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.heroGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Row(
           children: [
@@ -262,16 +271,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         width: 36,
                         height: 36,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.local_pharmacy,
-                          size: 32,
-                          color: Colors.white,
-                        ),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.local_pharmacy,
+                              size: 32,
+                              color: Colors.white,
+                            ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Pharma Way',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -282,8 +293,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     'مرحباً، $userName',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha:0.85),
-                        ),
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
                   ),
                 ],
               ),
@@ -306,13 +317,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   badgeColor: AppColors.secondary,
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                  icon: const Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pushNamed(context, '/cart'),
                 ),
               )
             else
               IconButton(
-                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                icon: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Colors.white,
+                ),
                 onPressed: () => Navigator.pushNamed(context, '/cart'),
               ),
           ],
@@ -352,7 +369,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         onChanged: (value) {
           _performSearch(value, homeState.companies);
@@ -382,13 +402,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         child: Column(
           children: [
-            const Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
+            const Icon(
+              Icons.search_off,
+              size: 48,
+              color: AppColors.textTertiary,
+            ),
             const SizedBox(height: 12),
             Text(
               'لا توجد نتائج لـ "${_searchController.text}"',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -422,9 +446,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   'الشركات (${_searchResults.length})',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -458,26 +482,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 40,
             height: 40,
             color: AppColors.surfaceVariant,
-            child: const Icon(Icons.business, size: 20, color: AppColors.textTertiary),
+            child: const Icon(
+              Icons.business,
+              size: 20,
+              color: AppColors.textTertiary,
+            ),
           ),
           errorWidget: (context, url, error) => Container(
             width: 40,
             height: 40,
             color: AppColors.primaryLighter,
-            child: const Icon(Icons.business, size: 20, color: AppColors.primary),
+            child: const Icon(
+              Icons.business,
+              size: 20,
+              color: AppColors.primary,
+            ),
           ),
         ),
       ),
       title: Text(
         company.name,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: company.productsCount != null && company.productsCount! > 0
           ? Text('${company.productsCount} منتج')
           : null,
-      trailing: const Icon(Icons.arrow_back_ios, size: 16, color: AppColors.textTertiary),
+      trailing: const Icon(
+        Icons.arrow_back_ios,
+        size: 16,
+        color: AppColors.textTertiary,
+      ),
       onTap: () => _navigateToCompany(company),
     );
   }
@@ -493,17 +529,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha:0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.wifi_off_rounded, size: 40, color: AppColors.error),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                size: 40,
+                color: AppColors.error,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               'حدث خطأ في تحميل البيانات',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -539,9 +579,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(width: 8),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -586,22 +626,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'الملف الشخصي',
           ),
         ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/orders');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/notifications');
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/profile');
-              break;
-          }
-        },
+        onTap: (index) => _navigateFromMainNavigation(context, index),
       ),
     );
+  }
+
+  Widget _buildTabletNavigationRail(BuildContext context) {
+    final extended = MediaQuery.sizeOf(context).width >= 900;
+    return NavigationRail(
+      extended: extended,
+      selectedIndex: 0,
+      onDestinationSelected: (index) =>
+          _navigateFromMainNavigation(context, index),
+      leading: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Image.asset(
+          'assets/icons/witoutbg.png',
+          width: 40,
+          height: 40,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.local_pharmacy, color: AppColors.primary),
+        ),
+      ),
+      destinations: const [
+        NavigationRailDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: Text('الرئيسية'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.shopping_bag_outlined),
+          selectedIcon: Icon(Icons.shopping_bag),
+          label: Text('الطلبات'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.notifications_outlined),
+          selectedIcon: Icon(Icons.notifications),
+          label: Text('الإشعارات'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: Text('الملف الشخصي'),
+        ),
+      ],
+    );
+  }
+
+  void _navigateFromMainNavigation(BuildContext context, int index) {
+    switch (index) {
+      case 1:
+        Navigator.pushNamed(context, '/orders');
+      case 2:
+        Navigator.pushNamed(context, '/notifications');
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+    }
   }
 }
